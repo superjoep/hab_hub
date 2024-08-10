@@ -11,9 +11,44 @@ const input_otherFurniamount = ref(0);
 const yourtotalValue = ref(0);
 const othersTotalValue = ref(0);
 const habLoaded = ref();
+const habVerify = ref();
+const isVerified = ref(false);
 onMounted(async () => {
   await loadUser();
 });
+const Verify = async () => {
+  try {
+    const response = await axios.get(
+      "https://origins.habbo.com/api/public/users",
+      {
+        params: {
+          name: habName.value,
+        },
+      }
+    );
+    habVerify.value = response.data;
+    if (habVerify.value.motto == "habhub") {
+      isVerified.value = true;
+      console.log(habName.value + userState.value.discID);
+      alert("Habbo username successfully verified!");
+      await axios.post(
+        "https://backend-empty-wildflower-8995.fly.dev/user/verify",
+        {
+          habName: habName.value,
+          discID: userState.value.discID,
+        }
+      );
+    } else {
+      alert("Cant verify habbo user, check your motto/username!");
+      isVerified.value = false;
+    }
+    console.log(isVerified.value);
+  } catch (error) {
+    alert("Cant verify habbo user, check your motto/username!");
+    console.log("failed to get user");
+  }
+  await loadUser();
+};
 const checkHabbo = async () => {
   try {
     const response = await axios.get(
@@ -265,19 +300,32 @@ onMounted(fetchItems);
         {{ Math.round(yourtotalValue * 100) / 100 }} HC For
         {{ Math.round(othersTotalValue * 100) / 100 }} HC
       </div>
-
-      <div
-        id="habName"
-        class="grid grid-cols-2 gap-2 place-items-center mt-4 sm:mt-0"
-      >
-        <div class="">Habbo IGN:</div>
-        <div>
-          <input
-            v-model="habName"
-            class="w-full h-8 pl-2 rounded-lg bg-gray-700 border-gray-600 text-gray-200"
-            type="text"
-          />
+      <div>
+        {{ userState }}
+        <div
+          id="habName"
+          class="grid grid-cols-2 gap-2 place-items-center mt-4 sm:mt-0"
+        >
+          <div class="">Habbo IGN:</div>
+          <div>
+            <input
+              v-model="habName"
+              class="w-full h-8 pl-2 rounded-lg bg-gray-700 border-gray-600 text-gray-200"
+              type="text"
+            />
+          </div>
         </div>
+        <div class="text-xs">
+          You can verify your habbo by adding 'habhub' in your motto and
+          pressing the verify button.
+        </div>
+        <a
+          id="verifyButton"
+          @click="Verify()"
+          class="py-2 px-4 text-white bg-blue-800 hover:bg-blue-900 rounded-lg w-full block sm:inline-block mt-2 sm:mt-0"
+        >
+          Verify Habbo
+        </a>
       </div>
       <div class="mt-4">
         <a

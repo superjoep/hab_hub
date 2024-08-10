@@ -20,7 +20,7 @@ app.use(express.json());
 // Configure CORS to allow requests from your frontend
 app.use(
   cors({
-    origin: "https://habhub.site", // Replace with your frontend URL
+    origin: "http://localhost:3000", // Replace with your frontend URL
     credentials: true, // Allow cookies to be sent with requests
   })
 );
@@ -123,7 +123,19 @@ app.get("/auth/discord/callback", async (req, res) => {
   }
   res.redirect("https://habhub.site");
 });
-
+app.post("/user/verify", async (req, res) => {
+  try {
+    console.log(req.body.discID + req.body.habName);
+    //let habName = req.habName;
+    await User.updateOne(
+      { discID: req.body.discID },
+      { habName: req.body.habName }
+    );
+    console.log("user updated");
+  } catch (error) {
+    console.error("error adding habboname");
+  }
+});
 // Connect to MongoDB
 mongoose
   .connect(process.env.MONGODB_URI, {
