@@ -7,9 +7,29 @@ const trades = ref([]);
 const orderDir = ref("Newly listed"); // Initialize with a default value
 const selectedItem = ref("All");
 const userName = ref("");
+const habOnline = ref({});
 onMounted(async () => {
   await getUsername();
 });
+// Fetch user data
+const loadHabboOnline = async (habName) => {
+  console.log(habName);
+  try {
+    const response = await axios.get(
+      "https://origins.habbo.com/api/public/users",
+      {
+        params: {
+          name: habName,
+        },
+      }
+    );
+    habOnline.value[habName] = response.data.online;
+  } catch (error) {
+    console.log("error");
+  }
+  console.log(habOnline.value[habName]);
+  return;
+};
 const deleteYourTrade = async (id) => {
   console.log(id);
   try {
@@ -32,6 +52,9 @@ const fetchTrades = async () => {
       "https://backend-empty-wildflower-8995.fly.dev/api/trade"
     );
     trades.value = response.data;
+    for (const trade of trades.value) {
+      loadHabboOnline(trade.habName);
+    }
   } catch (error) {
     console.error("There was an error fetching the trades:", error);
   }
@@ -141,7 +164,11 @@ onMounted(fetchTrades);
         <div class="grid grid-cols-3 text-center mb-4">
           <div>Discord: {{ trade.discName }}</div>
           <div>Profit: {{ Math.round(trade.profit * 100) / 100 }} HC</div>
-          <div>Habbo: {{ trade.habName }}</div>
+          <div>
+            Habbo: {{ trade.habName }}
+            <div class="text-xs" v-if="!habOnline[trade.habName]">offline</div>
+            <div class="text-xs" v-else>online</div>
+          </div>
         </div>
 
         <div class="grid grid-cols-3 text-center">

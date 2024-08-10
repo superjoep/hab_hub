@@ -10,10 +10,26 @@ const input_otherFurniName = ref("");
 const input_otherFurniamount = ref(0);
 const yourtotalValue = ref(0);
 const othersTotalValue = ref(0);
+const habLoaded = ref();
 onMounted(async () => {
   await loadUser();
 });
-// Fetch user data
+const checkHabbo = async () => {
+  try {
+    const response = await axios.get(
+      "https://origins.habbo.com/api/public/users",
+      {
+        params: {
+          name: habName.value,
+        },
+      }
+    );
+    habLoaded.value = response.data;
+    console.log(habLoaded.value + "user value");
+  } catch (error) {
+    console.log("something went wrong");
+  }
+};
 const loadUser = async () => {
   try {
     const response = await axios.get(
@@ -23,7 +39,6 @@ const loadUser = async () => {
       }
     );
     userState.value = response.data;
-    console.log(userState.value.username);
   } catch (error) {
     console.error("Error loading user:", error.message);
   }
@@ -37,8 +52,8 @@ const loadUser = async () => {
     document.getElementById("habName").style.display = "none";
   }
 };
+
 const deleteYourFurni = (name, amount) => {
-  console.log(name);
   const value = getItemValue(name, amount);
   yourtotalValue.value = yourtotalValue.value - value;
   const index = yourItems.value.findIndex((item) => item.Item === name);
@@ -66,7 +81,6 @@ const addYours = () => {
           input_yourFurniamount.value
         ),
       });
-      console.log(yourItems.value.includes(input_yourFurniName.value, 1));
     } else {
       let item = yourItems.value.find(
         (item) => item.Item === input_yourFurniName.value
@@ -87,7 +101,6 @@ const addYours = () => {
 };
 
 const habName = ref("");
-const Trades = ref([]);
 
 const addOthers = () => {
   if (input_otherFurniamount.value != 0 && input_otherFurniName.value != "") {
@@ -117,7 +130,6 @@ const addOthers = () => {
     othersTotalValue.value =
       othersTotalValue.value +
       getItemValue(input_otherFurniName.value, input_otherFurniamount.value);
-    console.log(yourtotalValue.value);
 
     console.log(yourItems.value);
   } else {
@@ -125,15 +137,16 @@ const addOthers = () => {
   }
 };
 const Totalprofit = ref(0);
-const addTrade = () => {
+const addTrade = async () => {
+  await checkHabbo();
   if (
     habName.value != "" &&
     yourItems.value != "" &&
     otherItems.value != "" &&
-    userState.value != null
+    userState.value != null &&
+    habLoaded.value != null
   ) {
     Totalprofit.value = yourtotalValue.value - othersTotalValue.value;
-    console.log(Trades);
     axios
       .post("https://backend-empty-wildflower-8995.fly.dev/api/trade", {
         discName: userState.value.username,
@@ -150,8 +163,10 @@ const addTrade = () => {
       .catch((error) => {
         console.error("There was an error adding the trade:", error);
       });
+  } else if (yourItems.value == "" || otherItems.value == "") {
+    alert("Input is missing");
   } else {
-    alert("Trade fields are missing!");
+    alert("Habbo cannot be found");
   }
 };
 
@@ -168,7 +183,6 @@ const fetchItems = async () => {
   } catch (error) {
     console.error("There was an error fetching the trades:", error);
   }
-  console.log(Itemtypes.value);
 };
 
 onMounted(fetchItems);
