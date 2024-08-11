@@ -20,7 +20,7 @@ app.use(express.json());
 // Configure CORS to allow requests from your frontend
 app.use(
   cors({
-    origin: "http://localhost:3000", // Replace with your frontend URL
+    origin: "https://habhub.site", // Replace with your frontend URL
     credentials: true, // Allow cookies to be sent with requests
   })
 );

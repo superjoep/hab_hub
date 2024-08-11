@@ -4,15 +4,19 @@ import axios from "axios";
 const yourItems = ref([]);
 const input_yourFurniName = ref("");
 const input_yourFurniamount = ref(0);
-const userState = ref(null);
+const input_yourFurniURL = ref("");
+const userState = ref({});
 const otherItems = ref([]);
 const input_otherFurniName = ref("");
 const input_otherFurniamount = ref(0);
+const input_otherFurniURL = ref("");
+//const input_otherFurniURL = ref("");
 const yourtotalValue = ref(0);
 const othersTotalValue = ref(0);
 const habLoaded = ref();
 const habVerify = ref();
 const isVerified = ref(false);
+
 onMounted(async () => {
   await loadUser();
 });
@@ -28,9 +32,9 @@ const Verify = async () => {
     );
     habVerify.value = response.data;
     if (habVerify.value.motto == "habhub") {
-      isVerified.value = true;
       console.log(habName.value + userState.value.discID);
       alert("Habbo username successfully verified!");
+
       await axios.post(
         "https://backend-empty-wildflower-8995.fly.dev/user/verify",
         {
@@ -38,6 +42,7 @@ const Verify = async () => {
           discID: userState.value.discID,
         }
       );
+      isVerified.value = true;
     } else {
       alert("Cant verify habbo user, check your motto/username!");
       isVerified.value = false;
@@ -55,7 +60,7 @@ const checkHabbo = async () => {
       "https://origins.habbo.com/api/public/users",
       {
         params: {
-          name: habName.value,
+          name: userState.value.habName,
         },
       }
     );
@@ -77,15 +82,6 @@ const loadUser = async () => {
   } catch (error) {
     console.error("Error loading user:", error.message);
   }
-  if (userState.value != null) {
-    document.getElementById("addButton").style.display = "block";
-    document.getElementById("loginBtn").style.display = "none";
-    document.getElementById("habName").style.display = "block";
-  } else {
-    document.getElementById("addButton").style.display = "none";
-    document.getElementById("loginBtn").style.display = "block";
-    document.getElementById("habName").style.display = "none";
-  }
 };
 
 const deleteYourFurni = (name, amount) => {
@@ -100,17 +96,21 @@ const deleteTheirFurni = (name, amount) => {
   const index = otherItems.value.findIndex((item) => item.Item === name);
   otherItems.value.splice(index, 1);
 };
-const addYours = () => {
+const addYours = async () => {
   if (input_yourFurniamount.value != 0 && input_yourFurniName.value != "") {
     const isTrue = yourItems.value.some(
       (e) => e.Item === input_yourFurniName.value
     );
-
+    input_yourFurniURL.value = Itemtypes.value.find(
+      (name) => name.name == input_yourFurniName.value
+    );
+    console.log(input_yourFurniURL.value.image);
     if (isTrue != true) {
       yourItems.value.push({
         id: Math.floor(Math.random() * 1000),
         Amount: input_yourFurniamount.value,
         Item: input_yourFurniName.value,
+        Image: input_yourFurniURL.value.image,
         Value: getItemValue(
           input_yourFurniName.value,
           input_yourFurniamount.value
@@ -142,11 +142,15 @@ const addOthers = () => {
     const isTrue = otherItems.value.some(
       (e) => e.Item === input_otherFurniName.value
     );
+    input_otherFurniURL.value = Itemtypes.value.find(
+      (name) => name.name == input_otherFurniName.value
+    );
     if (isTrue != true) {
       otherItems.value.push({
         id: Math.floor(Math.random() * 1000),
         Amount: input_otherFurniamount.value,
         Item: input_otherFurniName.value,
+        Image: input_otherFurniURL.value.image,
         Value: getItemValue(
           input_otherFurniName.value,
           input_otherFurniamount.value
@@ -175,7 +179,6 @@ const Totalprofit = ref(0);
 const addTrade = async () => {
   await checkHabbo();
   if (
-    habName.value != "" &&
     yourItems.value != "" &&
     otherItems.value != "" &&
     userState.value != null &&
@@ -185,7 +188,7 @@ const addTrade = async () => {
     axios
       .post("https://backend-empty-wildflower-8995.fly.dev/api/trade", {
         discName: userState.value.username,
-        habName: habName.value,
+        habName: userState.value.habName,
         yourItems: yourItems.value,
         otherItems: otherItems.value,
         profit: Totalprofit.value,
@@ -300,8 +303,10 @@ onMounted(fetchItems);
         {{ Math.round(yourtotalValue * 100) / 100 }} HC For
         {{ Math.round(othersTotalValue * 100) / 100 }} HC
       </div>
-      <div>
-        {{ userState }}
+      <div :key="userState.habName" v-if="userState.habName != null">
+        Welcome, {{ userState.habName }}
+      </div>
+      <div v-else-if="userState.discID != null">
         <div
           id="habName"
           class="grid grid-cols-2 gap-2 place-items-center mt-4 sm:mt-0"
@@ -315,6 +320,7 @@ onMounted(fetchItems);
             />
           </div>
         </div>
+
         <div class="text-xs">
           You can verify your habbo by adding 'habhub' in your motto and
           pressing the verify button.
@@ -327,8 +333,10 @@ onMounted(fetchItems);
           Verify Habbo
         </a>
       </div>
+
       <div class="mt-4">
         <a
+          v-if="!userState.discID"
           href="https://backend-empty-wildflower-8995.fly.dev/auth/discord"
           type="button"
           id="loginBtn"
@@ -338,6 +346,7 @@ onMounted(fetchItems);
         >
 
         <a
+          v-if="userState.habName"
           id="addButton"
           @click="addTrade"
           class="py-2 px-4 text-white bg-green-600 hover:bg-green-700 rounded-lg w-full block sm:inline-block mt-2 sm:mt-0"

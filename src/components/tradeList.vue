@@ -172,25 +172,34 @@ onMounted(fetchTrades);
         </div>
 
         <div class="grid grid-cols-3 text-center">
-          <div>
+          <div class="grid grid-cols-3">
             <div
               v-for="item in trade.yourItems"
               :key="'your-item-' + item.id"
-              class="text-sm"
+              class="text-xs text-white h-20 w-20 bg-gray-700 rounded-lg m-2 flex"
             >
-              {{ item.Amount }} x {{ item.Item }}
+              <div class="pt-14 pl-2 mt-1 absolute">{{ item.Amount }}</div>
+
+              <img class="h-full w-full object-contain p-1" :src="item.Image" />
             </div>
           </div>
           <div class="flex items-center justify-center text-lg font-semibold">
             for your
           </div>
           <div>
-            <div
-              v-for="item in trade.otherItems"
-              :key="'other-item-' + item.id"
-              class="text-sm"
-            >
-              {{ item.Amount }} x {{ item.Item }}
+            <div class="grid grid-cols-3">
+              <div
+                v-for="item in trade.otherItems"
+                :key="'your-item-' + item.id"
+                class="text-xs text-white h-20 w-20 bg-gray-700 rounded-lg m-2 flex"
+              >
+                <div class="pt-14 pl-2 mt-1 absolute">{{ item.Amount }}</div>
+
+                <img
+                  class="h-full w-full object-contain p-1"
+                  :src="item.Image"
+                />
+              </div>
             </div>
           </div>
         </div>
